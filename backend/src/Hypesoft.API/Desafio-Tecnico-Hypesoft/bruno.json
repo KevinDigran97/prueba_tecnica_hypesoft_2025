@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Desafio-Tecnico-Hypesoft",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

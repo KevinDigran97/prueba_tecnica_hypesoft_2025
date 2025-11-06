@@ -1,0 +1,77 @@
+# General
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.sln.docstates
+*.user
+*.userosscache
+*.suo
+*.rsuser
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+*.env
+
+# Logs
+logs/
+*.log
+**/logs/
+
+# Build outputs
+bin/
+obj/
+[Bb]uild/
+[Dd]ist/
+[Oo]ut/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+coverage/
+*.coverage
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Application specific
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+!appsettings.Example.json
+
+# Docker volumes
+mongo_data/
+keycloak_data/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+

@@ -40,10 +40,11 @@ services:
       - "8080:8080"
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-CHANGE_THIS_PASSWORD}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin123}
       KC_DB: dev-mem
       KC_HOSTNAME_STRICT: false
       KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT_HTTPS: false
     volumes:
       - keycloak_data:/opt/keycloak/data
     networks:

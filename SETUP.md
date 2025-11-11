@@ -34,32 +34,3 @@ EOF
 
 # Start services
 docker-compose up -d
-```
-
-### 4. Run Directly (without Docker)
-
-```bash
-# Ensure MongoDB is running on localhost:27017
-# Ensure Keycloak is running on localhost:8080 (optional)
-
-# Run the API
-cd backend/src/Hypesoft.API
-dotnet run
-```
-
-## Important Notes
-
-- **Never commit** `appsettings.Development.json` or `.env` files
-- **Use environment variables** for production
-- **Change default passwords** before deploying
-- See `README.SECURITY.md` for security best practices
-
-## Git Configuration
-
-The repository uses `.gitattributes` to ensure consistent line endings (LF). If you see warnings about CRLF, run:
-
-```bash
-git config core.autocrlf false
-git config core.eol lf
-```
-

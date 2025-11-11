@@ -5,7 +5,10 @@ using Microsoft.OpenApi.Models;
 using AspNetCoreRateLimit;
 using Hypesoft.Application;
 using Hypesoft.Infrastructure;
+using Hypesoft.Infrastructure.Repositories.InMemory;
 using Hypesoft.API.Middlewares;
+using System.Security.Claims;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,8 +23,13 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services to the container
+var isDevelopment = builder.Environment.IsDevelopment();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+// Add infrastructure services
+builder.Services.AddInfrastructure(builder.Configuration, isDevelopment);
 
 // Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
@@ -34,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
         Contact = new OpenApiContact
         {
             Name = "Hypesoft Labs",
-            Email = "contact@hypesoft.com"
+            Email = "conta@hypesoft.com"
         }
     });
 
@@ -75,15 +83,11 @@ builder.Services.AddSwaggerGen(c =>
 // CORS Configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddDefaultPolicy(builder =>
     {
-        policy.WithOrigins(
-                builder.Configuration["Cors:AllowedOrigins"]?.Split(',') 
-                ?? new[] { "http://localhost:3000" })
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials()
-            .WithExposedHeaders("X-Correlation-ID");
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
     });
 });
 
@@ -92,16 +96,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         var keycloakSettings = builder.Configuration.GetSection("Keycloak");
-        var authority = $"{keycloakSettings["Authority"]}/realms/{keycloakSettings["Realm"]}";
+        var authority = keycloakSettings["Authority"];
+
+        if (string.IsNullOrEmpty(authority))
+        {
+            throw new InvalidOperationException("Keycloak:Authority is not configured in appsettings.json");
+        }
 
         options.Authority = authority;
-        options.Audience = keycloakSettings["Resource"];
-        options.RequireHttpsMetadata = false; // Set to true in production
+        options.RequireHttpsMetadata = !isDevelopment; // Set to false in development, true in production
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
+            ValidIssuer = authority,
             ValidateAudience = true,
+            ValidAudience = "hypesoft-api",
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero
@@ -111,13 +121,43 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnAuthenticationFailed = context =>
             {
-                Log.Error("Authentication failed: {Error}", context.Exception.Message);
+                var error = context.Exception;
+                Log.Error("Authentication failed: {ErrorType} - {ErrorMessage}", 
+                    error.GetType().Name, 
+                    error.Message);
+                
+                // Log detalles adicionales para debugging
+                if (error is SecurityTokenInvalidAudienceException audienceError)
+                {
+                    Log.Error("Invalid audience. Expected: {ExpectedAudience}, Actual: {ActualAudience}", 
+                        audienceError.InvalidAudience, 
+                        audienceError.InvalidAudience ?? "null");
+                }
+                else if (error is SecurityTokenInvalidIssuerException issuerError)
+                {
+                    Log.Error("Invalid issuer. Expected: {ExpectedIssuer}, Actual: {ActualIssuer}", 
+                        issuerError.InvalidIssuer, 
+                        issuerError.InvalidIssuer ?? "null");
+                }
+                
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
             {
-                Log.Information("Token validated for user: {User}", 
-                    context.Principal?.Identity?.Name ?? "Unknown");
+                var claims = context.Principal?.Claims;
+                var userId = context.Principal?.Identity?.Name ?? "Unknown";
+                var audience = claims?.FirstOrDefault(c => c.Type == "aud")?.Value ?? "Not set";
+                
+                Log.Information("Token validated successfully. User: {User}, Audience: {Audience}", 
+                    userId, 
+                    audience);
+                return Task.CompletedTask;
+            },
+            OnChallenge = context =>
+            {
+                Log.Warning("Authentication challenge. Error: {Error}, ErrorDescription: {ErrorDescription}", 
+                    context.Error, 
+                    context.ErrorDescription);
                 return Task.CompletedTask;
             }
         };
@@ -140,17 +180,22 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Initialize database (create indexes)
+// Initialize database
 using (var scope = app.Services.CreateScope())
 {
     try
     {
-        await Hypesoft.Infrastructure.DependencyInjection.InitializeDatabaseAsync(scope.ServiceProvider);
-        Log.Information("Database initialized successfully");
+        await Hypesoft.Infrastructure.DependencyInjection.InitializeDatabaseAsync(scope.ServiceProvider, isDevelopment);
+        Log.Information("Database initialization completed");
     }
     catch (Exception ex)
     {
         Log.Error(ex, "An error occurred while initializing the database");
+        if (!isDevelopment)
+        {
+            throw;
+        }
+        // In development, continue with in-memory data
     }
 }
 
@@ -183,7 +228,7 @@ app.UseSerilogRequestLogging();
 
 app.UseIpRateLimiting();
 
-app.UseCors("AllowFrontend");
+app.UseCors(); // This will apply the default CORS policy
 
 app.UseAuthentication();
 app.UseAuthorization();

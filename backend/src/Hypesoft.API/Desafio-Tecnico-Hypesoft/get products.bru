@@ -4,8 +4,22 @@ meta {
   seq: 2
 }
 
-get {
-  url: http://localhost:5205/api
-  body: none
-  auth: inherit
+post {
+  url: http://localhost:8080/realms/master/protocol/openid-conect/token
+  body: multipartForm
+  auth: apikey
+}
+
+auth:apikey {
+  key: hypesoft-api
+  value: CnqMeNOh7SdMY2cEE0o55vhOPkreBksD
+  placement: header
+}
+
+body:multipart-form {
+  username: admin
+  password: adminadmin
+  garant-type: password
+  cliente_id: hypesof-spi
+  client_secret: CnqMeNOh7SdMY2cEE0o55vhOPkreBksD
 }

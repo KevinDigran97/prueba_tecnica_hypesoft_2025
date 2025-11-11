@@ -38,7 +38,7 @@ export function LowStockTable({ products }: LowStockTableProps) {
           <AlertCircle className="mr-2 h-5 w-5 text-orange-500" />
           Low Stock Products
         </CardTitle>
-        <Link href="/products">
+        <Link href="/dashboard/products">
           <Button variant="ghost" size="sm">
             View All
             <ExternalLink className="ml-2 h-4 w-4" />

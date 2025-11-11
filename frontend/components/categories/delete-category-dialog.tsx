@@ -10,32 +10,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeleteProduct } from "@/app/hooks/use-products";
+import { useDeleteCategory } from "@/app/hooks/use-categories";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
-interface DeleteProductDialogProps {
-  productId: string;
-  productName: string;
+interface DeleteCategoryDialogProps {
+  categoryId: string;
+  categoryName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteProductDialog({
-  productId,
-  productName,
+export function DeleteCategoryDialog({
+  categoryId,
+  categoryName,
   open,
   onOpenChange,
-}: DeleteProductDialogProps) {
-  const deleteMutation = useDeleteProduct();
+}: DeleteCategoryDialogProps) {
+  const deleteMutation = useDeleteCategory();
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(productId);
-      toast("Product deleted successfully");
+      await deleteMutation.mutateAsync(categoryId);
+      toast("Category deleted successfully");
       onOpenChange(false);
-    } catch (error) {
-      toast.error("Failed to delete product");
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Failed to delete category";
+      toast.error(message);
     }
   };
 
@@ -45,8 +46,8 @@ export function DeleteProductDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete <strong>{productName}</strong>.
-            This action cannot be undone.
+            This will permanently delete <strong>{categoryName}</strong>.
+            {" "}Categories with associated products cannot be deleted.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

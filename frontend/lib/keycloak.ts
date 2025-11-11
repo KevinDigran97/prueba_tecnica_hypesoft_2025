@@ -22,6 +22,16 @@ export async function loginWithKeycloak(
 ): Promise<KeycloakTokenResponse> {
   const tokenEndpoint = `${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/token`;
 
+  // Log para debugging (solo en desarrollo)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Keycloak Login Attempt:', {
+      endpoint: tokenEndpoint,
+      clientId: CLIENT_ID,
+      realm: REALM,
+      username,
+    });
+  }
+
   const params = new URLSearchParams({
     grant_type: 'password',
     client_id: CLIENT_ID,
@@ -38,7 +48,25 @@ export async function loginWithKeycloak(
   });
 
   if (!response.ok) {
-    throw new Error('Invalid credentials');
+    let errorMessage = 'Invalid credentials';
+    try {
+      const errorText = await response.text();
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error_description || errorData.error || errorMessage;
+      } catch (e) {
+        // Si no es JSON, usar el texto directamente
+        errorMessage = errorText || response.statusText || errorMessage;
+      }
+    } catch (e) {
+      // Si no se puede leer el error, usar el status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    
+    // Lanzar error con más información para debugging
+    const error = new Error(errorMessage);
+    (error as any).status = response.status;
+    throw error;
   }
 
   return response.json();

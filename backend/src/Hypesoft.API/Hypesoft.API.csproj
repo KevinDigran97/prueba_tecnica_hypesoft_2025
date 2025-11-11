@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Hypesoft.Infrastructure\Hypesoft.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="logs\" />
+  </ItemGroup>
+
 </Project>

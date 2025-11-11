@@ -1,14 +1,3 @@
-// import { useQuery } from "@tanstack/react-query";
-// import { categoriesApi } from "@/lib/api/categories";
-
-// export function useCategories() {
-//   return useQuery({
-//     queryKey: ["categories"],
-//     queryFn: () => categoriesApi.getAll(),
-//   });
-// }
-
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { categoriesApi } from "@/lib/api/categories";
 import type { CreateCategoryDto, UpdateCategoryDto } from "@/app/types";

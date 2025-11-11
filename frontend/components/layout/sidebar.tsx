@@ -15,8 +15,8 @@ import { logoutFromKeycloak } from "@/lib/keycloak";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Products", href: "/products", icon: Package },
-  { name: "Categories", href: "/categories", icon: FolderTree },
+  { name: "Products", href: "/dashboard/products", icon: Package },
+  { name: "Categories", href: "/dashboard/categories", icon: FolderTree },
 ];
 
 export function Sidebar() {
@@ -32,7 +32,7 @@ export function Sidebar() {
       }
     }
     logout();
-    window.location.href = "/login";
+    window.location.href = "/auth/login";
   };
 
   return (

@@ -57,6 +57,7 @@ export default function LoginPage() {
       // Decode JWT to get user info
       const decodedToken = decodeJWT(tokens.access_token);
       
+      // Establecer tokens y usuario
       setTokens(tokens.access_token, tokens.refresh_token);
       setUser({
         username: decodedToken.preferred_username || data.username,
@@ -64,18 +65,39 @@ export default function LoginPage() {
         roles: decodedToken.realm_access?.roles || [],
       });
 
+      // Verificar que el token se haya guardado correctamente
+      // Esto asegura que el estado y localStorage estén sincronizados
+      const verifyToken = () => {
+        const store = useAuthStore.getState();
+        const tokenInStore = store.accessToken;
+        const tokenInStorage = localStorage.getItem('access_token');
+        return tokenInStore === tokens.access_token && tokenInStorage === tokens.access_token;
+      };
+
+      // Esperar hasta que el token esté guardado (máximo 500ms)
+      let attempts = 0;
+      while (!verifyToken() && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        attempts++;
+      }
+
       toast.success("Logged in successfully");
 
+      // Pequeño delay adicional para asegurar que todo esté sincronizado
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Redirigir al dashboard
       router.push("/dashboard");
-    } catch (error) {
-      toast.error("Invalid username or password");
-    } finally {
+    } catch (error: any) {
+      console.error("Login error:", error);
+      const errorMessage = error?.message || "Invalid username or password";
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
